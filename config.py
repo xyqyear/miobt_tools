@@ -36,3 +36,7 @@ password = ''
 
 # 是否是debug模式
 debug_mode = False
+
+auto_copy = True
+
+auto_remove = True

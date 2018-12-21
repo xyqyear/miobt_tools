@@ -277,7 +277,7 @@ class Manager:
         to_del_hash = []
         for torrent_hash, task_info in self.tasks.items():
             # 如果是seeding状态的话,就复制文件到番剧目录,并且标记状态为copied
-            if task_info['status'] == 'seeding' and not task_info['copied']:
+            if auto_copy and task_info['status'] == 'seeding' and not task_info['copied']:
                 logger(task_info['title'], ': 下载完成,正在复制文件')
                 for file_path in task_info['file_list']:
                     src = os.path.join(download_path, file_path)
@@ -286,7 +286,7 @@ class Manager:
                 logger(task_info['title'], ': 文件复制完成')
                 task_info['copied'] = True
             # 如果是stopped状态就说明做种完成,删除任务并删除数据,归档数据
-            elif task_info['status'] == 'stopped' and task_info['copied']:
+            elif auto_remove and task_info['status'] == 'stopped' and task_info['copied']:
                 logger(task_info['title'], ': 做种完成,正在删除文件')
                 self.archived_tasks[torrent_hash] = task_info
                 to_del_hash.append(torrent_hash)
@@ -304,7 +304,8 @@ class Manager:
 
         self.save_tasks()
         # 代替以前的那个自动移除transmission任务的脚本
-        self.del_other_task()
+        if auto_remove:
+            self.del_other_task()
 
     def del_other_task(self):
         try:
