@@ -247,7 +247,8 @@ class Manager:
                     magnet_url=torrent['magnet_url'],  # 种子链接
                     status='downloading',  # 种子状态 downloading -> seeding -> stopped
                     torrent_id=0,  # 种子在transmission中的id
-                    file_list=[])  # 种子文件列表
+                    file_list=[],
+                    copied=False)  # 种子文件列表
         torrent_file = get_torrent_file(torrent['hash'])
         task['file_list'] = get_torrent_file_list(torrent_file)
         torrent_file_full_path = 'file://' + os.path.join(os.path.abspath('.'), torrent_file)
@@ -268,9 +269,7 @@ class Manager:
             except socket.timeout:
                 return
 
-            # 如果任务状态不是copied或者种子的状态是stopped的话
-            if task_info['status'] != 'copied' or torrent_task.status == 'stopped':
-                task_info['status'] = torrent_task.status
+            task_info['status'] = torrent_task.status
 
         self.handle_status()
 
@@ -278,16 +277,16 @@ class Manager:
         to_del_hash = []
         for torrent_hash, task_info in self.tasks.items():
             # 如果是seeding状态的话,就复制文件到番剧目录,并且标记状态为copied
-            if task_info['status'] == 'seeding':
+            if task_info['status'] == 'seeding' and not task_info['copied']:
                 logger(task_info['title'], ': 下载完成,正在复制文件')
                 for file_path in task_info['file_list']:
                     src = os.path.join(download_path, file_path)
                     dist = os.path.join(anime_list[task_info['keyword']]['path'], file_path)
                     copy(src, dist)
                 logger(task_info['title'], ': 文件复制完成')
-                task_info['status'] = 'copied'
+                task_info['copied'] = True
             # 如果是stopped状态就说明做种完成,删除任务并删除数据,归档数据
-            elif task_info['status'] == 'stopped':
+            elif task_info['status'] == 'stopped' and task_info['copied']:
                 logger(task_info['title'], ': 做种完成,正在删除文件')
                 self.archived_tasks[torrent_hash] = task_info
                 to_del_hash.append(torrent_hash)
