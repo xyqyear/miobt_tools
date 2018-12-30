@@ -59,12 +59,16 @@ def get_torrents(key_word, pages=1, recent=True):
             except Exception as e:
                 logger(e)
                 if retry_count == 0:
-                    return False
+                    return None
                 retry_count -= 1
 
         # 去掉content中的换行,方便使用re
         content = content.replace('\n', '')
-        tbody = re.findall(r'<tbody class="tbody" id="data_list">.*</tbody>', content)[0]
+        tbody = re.findall(r'<tbody class="tbody" id="data_list">.*</tbody>', content)
+        if tbody:
+            tbody = tbody[0]
+        else:
+            return None
         # 获得每个搜索结果
         trs = re.findall(r'<tr class="alt\d">.*?</tr>', tbody)
         for tr in trs:
@@ -121,7 +125,10 @@ def get_one_torrent(keyword, preference):
     :return:
     """
     torrents = get_torrents(keyword)
-    return choose_torrents(torrents, preference)
+    if torrents:
+        return choose_torrents(torrents, preference)
+    else:
+        return None
 
 
 def get_torrent_file(torrent_hash):
@@ -227,8 +234,7 @@ class Manager:
         :param retry_count: 搜索到目标种子为止的重试次数
         :return:
         """
-        torrents = get_torrents(keyword)
-        torrent = choose_torrents(torrents, self.anime_list[keyword]['preference'])
+        torrent = get_one_torrent(keyword, self.anime_list[keyword]['preference'])
         logger('got_torrent:', torrent, level=0)
         # 如果未找到,就再次尝试多次
         if not torrent:
