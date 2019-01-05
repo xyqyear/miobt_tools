@@ -242,6 +242,9 @@ class Manager:
                 logger(keyword, ':目标种子未找到,休息一小时')
                 schedule.every().hour.do(self.add_task_next_time, keyword, retry_count-1)
                 return
+
+            else:
+                return
         # 如果种子已经下载过就跳过
         if torrent['hash'] in self.tasks or torrent['hash'] in self.archived_tasks:
             logger(torrent['title'], ':种子已下载,跳过')
