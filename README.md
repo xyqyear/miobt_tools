@@ -1,1 +1,3 @@
-# miobt_anime_schedule_download
+# 待补全
+
+有空补一下README,现在没啥时间(
