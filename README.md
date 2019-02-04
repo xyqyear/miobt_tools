@@ -8,8 +8,8 @@
 
 ## 安装运行环境
 ### 1.安装Python3.6+
-1.安装python：
-略
+1.安装python：\
+略\
 2.安装依赖库：
 
 	pip install bcoding schedule requests transmissionrpc
