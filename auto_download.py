@@ -278,7 +278,9 @@ class Manager:
             except socket.timeout:
                 return
 
-            task_info['status'] = torrent_task.status
+            # 如果没有出现做种没到设定ratio就停止的情况就设置任务状态,否则就忽略.
+            if not (torrent_task.ratio < seed_ratio and torrent_task.status == 'stopped'):
+                task_info['status'] = torrent_task.status
 
         self.handle_status()
 
@@ -325,8 +327,9 @@ class Manager:
             return
 
         for torrent in torrents:
-            if torrent.status == 'stopped':
+            if torrent.status == 'stopped' and torrent.ratio >= seed_ratio:
                 logger('已删除任务: ', torrent.name)
+                logger('ratio:', torrent.ratio, level=0)
                 try:
                     self.transmission_client.remove_torrent(torrent.id)
                 except transmissionrpc.error.TransmissionError:

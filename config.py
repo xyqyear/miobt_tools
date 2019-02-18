@@ -41,3 +41,4 @@ debug_mode = False
 auto_copy = False
 
 auto_remove = False
+seed_ratio = 8
