@@ -288,18 +288,22 @@ class Manager:
         to_del_hash = []
         for torrent_hash, task_info in self.tasks.items():
             # 如果是seeding状态的话,就复制文件到番剧目录,并且标记状态为copied
-            if auto_copy and task_info['status'] == 'seeding' and not task_info['copied']:
-                logger(task_info['title'], ': 下载完成,正在复制文件')
-                for file_path in task_info['file_list']:
-                    src = os.path.join(download_path, file_path)
-                    dist = os.path.join(anime_list[task_info['keyword']]['path'], file_path)
-                    copy(src, dist)
-                logger(task_info['title'], ': 文件复制完成')
-                task_info['copied'] = True
+            if task_info['status'] == 'seeding' and not task_info['copied']:
+                if auto_copy:
+                    logger(task_info['title'], ': 下载完成,正在复制文件')
+                    for file_path in task_info['file_list']:
+                        src = os.path.join(download_path, file_path)
+                        dist = os.path.join(anime_list[task_info['keyword']]['path'], file_path)
+                        copy(src, dist)
+                    logger(task_info['title'], ': 文件复制完成')
+                    task_info['copied'] = True
+                else:
+                    self.archived_tasks[torrent_hash] = task_info
+                    logger(task_info['title'], ': 下载完成,任务已归档')
+                    to_del_hash.append(torrent_hash)
             # 如果是stopped状态就说明做种完成,删除任务并删除数据,归档数据
             elif auto_remove and task_info['status'] == 'stopped' and task_info['copied']:
                 logger(task_info['title'], ': 做种完成,正在删除文件')
-                self.archived_tasks[torrent_hash] = task_info
                 to_del_hash.append(torrent_hash)
 
                 if len(task_info['file_list']) > 1:
@@ -308,6 +312,7 @@ class Manager:
                 else:
                     os.remove(os.path.join(download_path, task_info['file_list'][0]))
 
+                self.archived_tasks[torrent_hash] = task_info
                 logger(task_info['title'], ': 删除完成,任务已存档')
 
         for torrent_hash in to_del_hash:

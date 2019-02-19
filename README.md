@@ -48,7 +48,8 @@ _未测试_
 
 关于auto_copy和auto_remove:\
 auto_copy代表每个番下完后是否自动复制到独立设置的番剧储存目录\
-auto_remove代表是否在种子做种完成后删除相应的文件 ***如果auto_copy为False的话，请务必使此变量也为False***
+auto_remove代表是否在种子做种完成后删除相应的文件 ***如果auto_copy为False的话，此选项不会生效***\
+seed_ratio代表此任务上传和下载之比(和transmission里的配置一致)(不知道的话可以不用管)
 
 ### 运行auto_download.py
 
