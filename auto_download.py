@@ -287,9 +287,10 @@ class Manager:
     def handle_status(self):
         to_del_hash = []
         for torrent_hash, task_info in self.tasks.items():
-            # 如果是seeding状态的话,就复制文件到番剧目录,并且标记状态为copied
-            if task_info['status'] == 'seeding' and not task_info['copied']:
-                if auto_copy:
+            # 处理下载完成,正在做种的情况
+            if task_info['status'] == 'seeding':
+                # 如果开启自动复制,但是还没有复制,就复制文件
+                if auto_copy and not task_info['copied']:
                     logger(task_info['title'], ': 下载完成,正在复制文件')
                     for file_path in task_info['file_list']:
                         src = os.path.join(download_path, file_path)
@@ -297,23 +298,27 @@ class Manager:
                         copy(src, dist)
                     logger(task_info['title'], ': 文件复制完成')
                     task_info['copied'] = True
-                else:
+
+                # 如果 未开启自动复制 或者 未开启自动移除
+                if not auto_copy or not auto_remove:
                     self.archived_tasks[torrent_hash] = task_info
                     logger(task_info['title'], ': 下载完成,任务已归档')
                     to_del_hash.append(torrent_hash)
+
             # 如果是stopped状态就说明做种完成,删除任务并删除数据,归档数据
-            elif auto_remove and task_info['status'] == 'stopped' and task_info['copied']:
-                logger(task_info['title'], ': 做种完成,正在删除文件')
-                to_del_hash.append(torrent_hash)
+            elif task_info['status'] == 'stopped':
+                if task_info['copied'] and auto_remove:
+                    logger(task_info['title'], ': 做种完成,正在删除文件')
 
-                if len(task_info['file_list']) > 1:
-                    _dir = split_path(task_info['file_list'][0])
-                    rmtree(os.path.join(download_path, _dir))
-                else:
-                    os.remove(os.path.join(download_path, task_info['file_list'][0]))
+                    if len(task_info['file_list']) > 1:
+                        _dir = split_path(task_info['file_list'][0])
+                        rmtree(os.path.join(download_path, _dir))
+                    else:
+                        os.remove(os.path.join(download_path, task_info['file_list'][0]))
 
-                self.archived_tasks[torrent_hash] = task_info
-                logger(task_info['title'], ': 删除完成,任务已存档')
+                    self.archived_tasks[torrent_hash] = task_info
+                    logger(task_info['title'], ': 删除完成,任务已存档')
+                    to_del_hash.append(torrent_hash)
 
         for torrent_hash in to_del_hash:
             del self.tasks[torrent_hash]
@@ -338,9 +343,9 @@ class Manager:
                 try:
                     self.transmission_client.remove_torrent(torrent.id)
                 except transmissionrpc.error.TransmissionError:
-                    return
+                    continue
                 except socket.timeout:
-                    return
+                    continue
 
 
 def demo():
