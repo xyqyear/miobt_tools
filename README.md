@@ -1,3 +1,6 @@
+`Deprecated`\
+`已废弃`
+
 ## 简介
 本程序用于定时自动从[miobt](http://miobt.com)获取番剧信息并自动创建transmission任务下载
 
